@@ -1,39 +1,41 @@
 import data_fetcher
 
 def handle_fetcher_response(animal):
-    responce = data_fetcher.fetch_data(animal)
-    if responce == []:
+    response = data_fetcher.fetch_data(animal)
+
+    if not response:
+        
         return f"<h2>The animal \"{animal}\" doesn't exist.</h2>"
-    elif type(responce) == tuple:
-        return f"Error: {responce[0]}, error message: {responce[1]['error']}"
+    elif isinstance(response, tuple):
+        return f"Error: {response[0]}, error message: {response[1]['error']}"
     else:
-        return generate_animal_info(responce)
+        return generate_animal_info(response)
 
 def get_user_input():
     while True:
         try:
             print("Please, enter a name of the animal. \n")
             animal = input("Enter here: ")
-            new_animal = ''
             if animal[0].islower():
-                new_animal = animal[0].upper() + animal[1:]
-                return new_animal
-            else:
-                return animal
+                animal = animal[0].upper() + animal[1:]
+            return animal
         except ValueError as e:
-            print("You entered something that not an animal! Error: ", e)
+            print("You entered something that is not an animal! Error: ", e)
 
 def generate_animal_info(response):
-    name = response.get('name', 'Unknown')
-    description = response.get('description', 'No description available.')
-    return f"<h1>{name}</h1><p>{description}</p>"
+    info = ""
+    for animal in response:
+        name = animal.get('name', 'Unknown')
+        description = animal.get('characteristics', {}).get('description', 'No description available.')
+        info += f"<li class='cards__item'><h1 class='card__title'>{name}</h1><p class='card__text'>{description}</p></li>"
+    return info
 
 def replace_template_content(template_file, output_file, content):
     with open(template_file, 'r') as file:
         template = file.read()
-    
-    modified_content = template.replace('{{content}}', content)
-    
+
+    modified_content = template.replace('__REPLACE_ANIMALS_INFO__', content)
+
     with open(output_file, 'w') as file:
         file.write(modified_content)
 
